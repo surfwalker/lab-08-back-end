@@ -1,19 +1,27 @@
 {
-    "name": "demos",
-    "version": "1.0.0",
-    "description": "",
-    "main": "server.js",
-    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "start": "node server.js",
-      "watch": "nodemon server.js"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-      "cors": "^2.8.5",
-      "dotenv": "^8.0.0",
-      "express": "^4.17.1"
-    }
+  "name": "node-nmp-express",
+  "version": "1.0.0",
+  "description": "Number and name of feature: ________________________________",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "watch": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravewillow6383/node-nmp-express.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ravewillow6383/node-nmp-express/issues"
+  },
+  "homepage": "https://github.com/ravewillow6383/node-nmp-express#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1"
   }
+}
