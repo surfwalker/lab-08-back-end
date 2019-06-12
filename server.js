@@ -6,6 +6,7 @@ require('dotenv').config();
 // Application Dependencies
 const express = require('express');
 const cors = require('cors');
+const superagent = require('superagent');
 
 // Application Setup
 const PORT = process.env.PORT;
@@ -13,69 +14,56 @@ const app = express();
 app.use(cors());
 
 // API Routes
-app.get('/location', (request,response) => {
-  try {
-    const locationData = searchToLatLong(request.query.data);
-    response.send(locationData);
-  }
-  catch(error) {
-    console.error(error);
-    response.status(500).send('Status: 500. So sorry, something went wrong.');
-  }
-});
-app.get('/weather', (request,response) => {
-  try {
-    const weatherData = searchWeatherData(request.query.data);
-    response.send(weatherData);
-  }
-  catch(error) {
-    console.error(error);
-    response.status(500).send('Status: 500. So sorry, something went wrong.');
-  }
-});
+app.get('/location', handleLocationRequest);
+app.get('/weather', handleWeatherRequest);
 
-
-// Helper Functions
-function searchToLatLong(query) {
-  const geoData = require('./data/geo.json');
-  const location = new Location(query, geoData);
-  //   const location = {
-  //     search_query: query,
-  //     formatted_query: geoData.results[0].formatted_address,
-  //     latitude: geoData.results[0].geometry.location.lat,
-  //     longitude: geoData.results[0].geometry.location.lng
-  //   };
-  return location;
-}
-function searchWeatherData(query) {
-  const skyData = require('./data/darksky.json');
-  const weather = new Weather(query, skyData);
-  //   const weather = {
-  //     search_query: query,
-  //     time: skyData.daily.data[0].time,
-  //     forecast: skyData.daily.data[0].summary,
-  //     time2: skyData.daily.data[0].time,
-  //     forecast2: skyData.daily.data[0].summary
-
-
-  // latitude: skyData.results[0],
-  // longitude: skyData.results[0],
-  //   };
-  return weather;
-}
-function Weather(query, skyData) {
-  this.search_query = query;
-  this.time = skyData.daily.data[0].time;
-  this.forecast = skyData.daily.data[0].summary;
-}
-
-// Refactor the searchToLatLong function to replace the object literal with a call to this constructor function:
-function Location(query, geoData) {
-  this.search_query = query;
-  this.formatted_query = geoData.results[0].formatted_address;
-  this.latitude = geoData.results[0].geometry.location.lat;
-  this.longitude = geoData.results[0].geometry.location.lng;
-}
-
-// Make sure the server is listening for requests
 app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );
+
+
+function handleLocationRequest(request, response){
+  const searchData = request.query.data;
+  const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchData}&key=${process.env.GEO_DATA}`;
+
+  return superagent.get(URL)
+    .then(res => {
+      const location = new Location(request.query.data, res.body);
+      response.send(location);
+    })
+    .catch(error=>{
+      handleError(error, response);
+    })
+}
+
+function Location(query, rawData) {
+  console.log(query, rawData);
+  this.search_query = query;
+  this.formatted_query = rawData.results[0].formatted_address;
+  this.latitude = rawData.results[0].geometry.location.lat;
+  this.longitude = rawData.results[0].geometry.location.lng;
+}
+
+function handleWeatherRequest(request, response) {
+  try {
+    const rawData = require('.data/geo.json');
+    let daySummaries = rawData.daily.data.map(data => new Weather(data));
+    // const daySummaries = [];
+    // rawData.daily.data.forEach(dayData => {
+    //   daySummaries.push(new Weather(dayData));
+    // });
+
+    response.send(daySummaries);
+
+  } catch (error) {
+    handleError(error, response);
+  }
+}
+
+function Weather(dayData) {
+  this.forecast = dayData.summary;
+  this.time = new Date(dayData.time * 1000).toString().slice(0,15);
+}
+
+function handleError(error, response) {
+  console.error(error);
+  response.status(500).send('Ruh roh');
+}
