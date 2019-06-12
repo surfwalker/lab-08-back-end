@@ -43,19 +43,26 @@ function Location(query, rawData) {
 }
 
 function handleWeatherRequest(request, response) {
-  try {
-    const rawData = require('.data/geo.json');
-    let daySummaries = rawData.daily.data.map(data => new Weather(data));
-    // const daySummaries = [];
-    // rawData.daily.data.forEach(dayData => {
-    //   daySummaries.push(new Weather(dayData));
-    // });
+  const searchData = request.query;
+  console.log('searchData', searchData);
+  const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${searchData.lat}`;
+  console.log(URL)
+  return superagent.get(URL)
+    .then(res => {
+      let daySummaries = searchData.daily.data.map(data => new Weather(data));
+      response.send(daySummaries);
+    })
+    .catch(error=>{
+      handleError(error, response);
+    })
+  // try {
+  //   const rawData = require('.data/geo.json');
 
-    response.send(daySummaries);
+  //   response.send(daySummaries);
 
-  } catch (error) {
-    handleError(error, response);
-  }
+  // } catch (error) {
+  //   handleError(error, response);
+  // }
 }
 
 function Weather(dayData) {
