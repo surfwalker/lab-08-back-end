@@ -65,5 +65,5 @@ function Weather(dayData) {
 
 function handleError(error, response) {
   console.error(error);
-  response.status(500).send('Ruh roh');
+  response.status(500).send('I\'m sorry! we have run into a problem. Please try again later.');
 }
