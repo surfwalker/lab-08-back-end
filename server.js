@@ -11,6 +11,9 @@ const pg = require('pg');
 
 // database set up
 const client = new pg.Client(process.env.DATABASE_URL)
+client.connect();
+client.on('err', err => console.error(err));
+
 
 // Application Setup
 const PORT = process.env.PORT;
@@ -20,11 +23,29 @@ app.use(cors());
 // API Routes
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
+// app.get('/db', dbTest);
+
+// function dbTest(request, response){
+//   // response.send('Hello')
+//   client.query('SELECT * FROM locations')
+//     .then(results => response.send(results.rows))
+//     .catch(err => {
+//       console.error(err)
+//       response.status(500).send(err)
+//     })
+// }
+
 
 app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );
 
 
 function handleLocationRequest(request, response){
+
+  // TODO: first check if location has already been searched
+  // TODO: we need to cache aka put location data in database
+  // TODO: if location is in DB => return "cached" version:
+  // SELECT * FROM locations WHERE search_query = the query passed
+  // TODO: if the location data is not in the DB, do below, aka get it from the API
   const searchData = request.query.data;
   const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchData}&key=${process.env.GEO_DATA}`;
 
