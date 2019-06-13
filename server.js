@@ -43,13 +43,15 @@ function Location(query, rawData) {
 }
 
 function handleWeatherRequest(request, response) {
-  const searchData = request.query;
+  const searchData = request.query.data;
   console.log('searchData', searchData);
-  const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${searchData.lat}`;
+  // TODO add lng
+  const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${searchData.latitude},${searchData.longitude}`;
   console.log(URL)
   return superagent.get(URL)
     .then(res => {
-      let daySummaries = searchData.daily.data.map(data => new Weather(data));
+      console.log('res.body', res.body);
+      let daySummaries = res.body.daily.data.map(data => new Weather(data));
       response.send(daySummaries);
     })
     .catch(error=>{
