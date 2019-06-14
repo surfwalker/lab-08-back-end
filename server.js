@@ -20,8 +20,8 @@ const PORT = process.env.PORT;
 const app = express();
 app.use(cors());
 
-// API Routes
-app.get('/location', handleLocationRequest);
+// routes
+app.get('/location', handleLocation);
 app.get('/weather', handleWeatherRequest);
 app.get('/events', handleEventsRequest);
 // app.get('/db', dbTest);
@@ -36,37 +36,46 @@ app.get('/events', handleEventsRequest);
 //     })
 // }
 
+// internal modules
+const getLocation = require('./modules/location');
+
+// route handlers
+function handleLocation(req, res) {
+  getLocation(req.query.data, client, superagent)
+    .then(location => res.send(location))
+    .catch(error => handleError(error, res));
+}
 
 app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );
 
 
-function handleLocationRequest(request, response){
+// function handleLocationRequest(request, response){
 
   // TODO: first check if location has already been searched
   // TODO: we need to cache aka put location data in database
   // TODO: if location is in DB => return "cached" version:
   // SELECT * FROM locations WHERE search_query = the query passed
   // TODO: if the location data is not in the DB, do below, aka get it from the API
-  const searchData = request.query.data;
-  const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchData}&key=${process.env.GEO_DATA}`;
+  //const searchData = request.query.data;
+  // const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchData}&key=${process.env.GEO_DATA}`;
 
-  return superagent.get(URL)
-    .then(res => {
-      const location = new Location(request.query.data, res.body);
-      response.send(location);
-    })
-    .catch(error=>{
-      handleError(error, response);
-    })
-}
+//   return superagent.get(URL)
+//     .then(res => {
+//       const location = new Location(request.query.data, res.body);
+//       response.send(location);
+//     })
+//     .catch(error=>{
+//       handleError(error, response);
+//     })
+// }
 
-function Location(query, rawData) {
-  console.log(query, rawData);
-  this.search_query = query;
-  this.formatted_query = rawData.results[0].formatted_address;
-  this.latitude = rawData.results[0].geometry.location.lat;
-  this.longitude = rawData.results[0].geometry.location.lng;
-}
+// function Location(query, rawData) {
+//   console.log(query, rawData);
+//   this.search_query = query;
+//   this.formatted_query = rawData.results[0].formatted_address;
+//   this.latitude = rawData.results[0].geometry.location.lat;
+//   this.longitude = rawData.results[0].geometry.location.lng;
+// }
 
 function handleWeatherRequest(request, response) {
   const searchData = request.query.data;
