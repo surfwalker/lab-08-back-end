@@ -23,6 +23,7 @@ app.use(cors());
 // API Routes
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
+app.get('/events', handleEventsRequest);
 // app.get('/db', dbTest);
 
 // function dbTest(request, response){
@@ -94,10 +95,34 @@ function handleWeatherRequest(request, response) {
 
 function Weather(dayData) {
   this.forecast = dayData.summary;
-  this.time = new Date(dayData.time * 1000).toString().slice(0,15);
+  this.time = new Date(dayData.time * 1000).toDateString();
 }
 
 function handleError(error, response) {
   console.error(error);
   response.status(500).send('I\'m sorry! we have run into a problem. Please try again later.');
+}
+
+// EventBrite API
+
+function handleEventsRequest(req, res){
+  getEvents(req.query)
+    .then(data => res.send(data))
+    .catch(error => handleError(error) )
+}
+
+function getEvents(query){
+  console.log('query', query);
+  let URL = `https://www.eventbriteapi.com/v3/events/search?location.address=${query.data.formatted_query}&location.within=1km`
+  return superagent.get(URL)
+    .set('Authorization', `Bearer ${process.env.EVENT_BRITE}`)
+    .then(data => data.body.events.map(event => new Event(event)) )
+    .catch(error => handleError(error));
+}
+
+function Event(event){
+  this.link = event.url,
+  this.name= event.name.text,
+  this.event_date = event.start.local,
+  this.summary = event.summary
 }
