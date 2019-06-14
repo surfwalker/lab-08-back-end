@@ -22,7 +22,7 @@ app.use(cors());
 
 // routes
 app.get('/location', handleLocation);
-app.get('/weather', handleWeatherRequest);
+app.get('/weather', handleWeather);
 app.get('/events', handleEventsRequest);
 // app.get('/db', dbTest);
 
@@ -38,6 +38,7 @@ app.get('/events', handleEventsRequest);
 
 // internal modules
 const getLocation = require('./modules/location');
+const getForecasts = require('./modules/weather');
 
 // route handlers
 function handleLocation(req, res) {
@@ -46,16 +47,25 @@ function handleLocation(req, res) {
     .catch(error => handleError(error, res));
 }
 
+function handleWeather(req, res) {
+
+  // are we getting the location Id here, we're gonna need it
+  // so check the queryString and/or view the city-explorer front end code
+  // and make it work! ;)
+  console.log('************* handle weather', req.query.data);
+
+  getForecasts(req.query.data.latitude, req.query.data.longitude, client, superagent)
+    .then(forecasts => res.send(forecasts))
+    .catch(error => handleError(error, res));
+  console.log(req.query);
+}
+
 app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );
 
 
 // function handleLocationRequest(request, response){
 
-  // TODO: first check if location has already been searched
-  // TODO: we need to cache aka put location data in database
-  // TODO: if location is in DB => return "cached" version:
   // SELECT * FROM locations WHERE search_query = the query passed
-  // TODO: if the location data is not in the DB, do below, aka get it from the API
   //const searchData = request.query.data;
   // const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchData}&key=${process.env.GEO_DATA}`;
 
@@ -77,35 +87,26 @@ app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );
 //   this.longitude = rawData.results[0].geometry.location.lng;
 // }
 
-function handleWeatherRequest(request, response) {
-  const searchData = request.query.data;
-  console.log('searchData', searchData);
-  // TODO add lng
-  const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${searchData.latitude},${searchData.longitude}`;
-  console.log(URL)
-  return superagent.get(URL)
-    .then(res => {
-      console.log('res.body', res.body);
-      let daySummaries = res.body.daily.data.map(data => new Weather(data));
-      response.send(daySummaries);
-    })
-    .catch(error=>{
-      handleError(error, response);
-    })
-  // try {
-  //   const rawData = require('.data/geo.json');
+// function handleWeatherRequest(request, response) {
+  // const searchData = request.query.data;
+  // console.log('searchData', searchData);
+  // const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${searchData.latitude},${searchData.longitude}`;
+  // console.log(URL)
+//   return superagent.get(URL)
+//     .then(res => {
+//       console.log('res.body', res.body);
+//       let daySummaries = res.body.daily.data.map(data => new Weather(data));
+//       response.send(daySummaries);
+//     })
+//     .catch(error=>{
+//       handleError(error, response);
+//     })
+// }
 
-  //   response.send(daySummaries);
-
-  // } catch (error) {
-  //   handleError(error, response);
-  // }
-}
-
-function Weather(dayData) {
-  this.forecast = dayData.summary;
-  this.time = new Date(dayData.time * 1000).toDateString();
-}
+// function Weather(dayData) {
+//   this.forecast = dayData.summary;
+//   this.time = new Date(dayData.time * 1000).toDateString();
+// }
 
 function handleError(error, response) {
   console.error(error);
