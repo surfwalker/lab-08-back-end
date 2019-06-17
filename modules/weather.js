@@ -1,52 +1,55 @@
-function getForecasts(query, client, superagent) {
+function getForecasts(latitude, longitude, locationId, client, superagent) {
 
-  return checkCachedWeather(query, client).then(weatherData => {
-
-    // If the weather data is found, return the weatherData:
-    if (weatherData.length > 0) {
-      console.log('weatherData from cache', weatherData)
-      return weatherData;
-    
-    //If weatherData is not found, get Location from API:
-    } else {
-      return getFromAPI(query, client, superagent);
-    }
-  })  
-}
-
+  let forecasts = getFromCache(client, locationId);
   
-function checkCachedWeather(query, client) {
-  
-  // console.log('&&&&&&&& query', query);
-  const SQL = `SELECT * FROM weathers WHERE location_id=${query.id}`;
-
-  return client.query(SQL).then(result => {
-    return result.rows;
-  }); 
+  if (forecasts.length === 0) {
+    forecasts = getFromAPI(latitude, longitude, locationId, client, superagent);
+  } else {
+    return forecasts;
+  }
 }
   
-function getFromAPI(query, client, superagent) {
-  console.log('############## query.latitude ', query.latitude);
+function getFromCache(client, locationId) {
   
-  const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${query.latitude},${query.longitude}`;
+  return client
+    .get('SELECT * FROM weathers WHERE location_id=' + locationId)
+    .then(result => result.rows);
+  
+}
+  
+function getFromAPI(latitude, longitude, locationId, client, superagent) {
+  
+  const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${latitude},${longitude}`;
 
   return superagent
     .get(URL)
     .then(response => response.body.daily.data)
-    .then(days => {
-      return days.map(day => {
-        let weather = new Weather(day);
-        cacheForecasts(weather, client, query.id);
-        return weather;
-      });
-    });
-}
+    .then(days => days.map(day => new Weather(day)))
+    .then(dayInstances => cacheForecasts(dayInstances, locationId, client))
   
-function cacheForecasts(weather, client, locationId) {
-  console.log('caching weather data ', weather, locationId);
+}
 
-  const SQL = `INSERT INTO weathers (forecast, time, location_id) VALUES ('${weather.forecast}', '${weather.time}', ${locationId});`;
-  return client.query(SQL).then(results => weather);
+// old code:
+
+// return superagent
+//   .get(URL)
+//   .then(res => {
+//     console.log('res.body', res.body);
+//     let daySummaries = res.body.daily.data.map(data => new Weather(data));
+//     response.send(daySummaries);
+//   })
+
+  
+function cacheForecasts(dayInstances, locationId, client) {
+  
+  dayInstances.forEach(day => {
+  
+    const SQL = `
+        INSERT INTO weathers (forecast, time, location_id) 
+        VALUES (${day.foreacast}, ${day.time}, ${locationId});`;
+  
+    client.query(SQL);
+  });
 }
   
 function Weather(dayData) {
@@ -55,3 +58,4 @@ function Weather(dayData) {
 }
   
 module.exports = getForecasts;
+  
