@@ -16,21 +16,15 @@ client.on('err', err => console.error(err));
 
 
 // Application Setup
-const app = express();
 const PORT = process.env.PORT;
+const app = express();
 app.use(cors());
-
-// internal modules
-const getLocation = require('./modules/location');
-const getForecasts = require('./modules/weather');
 
 // routes
 app.get('/location', handleLocation);
 app.get('/weather', handleWeather);
 app.get('/events', handleEventsRequest);
 // app.get('/db', dbTest);
-
-// DB TEST:
 
 // function dbTest(request, response){
 //   // response.send('Hello')
@@ -42,6 +36,9 @@ app.get('/events', handleEventsRequest);
 //     })
 // }
 
+// internal modules
+const getLocation = require('./modules/location');
+const getForecasts = require('./modules/weather');
 
 // route handlers
 function handleLocation(req, res) {
@@ -52,12 +49,64 @@ function handleLocation(req, res) {
 
 function handleWeather(req, res) {
 
-  console.log('************* the query from location ', req.query.data);
+  // are we getting the location Id here, we're gonna need it
+  // so check the queryString and/or view the city-explorer front end code
+  // and make it work! ;)
+  console.log('************* handle weather', req.query.data);
 
-  getForecasts(req.query.data, client, superagent)
+  getForecasts(req.query.data.latitude, req.query.data.longitude, client, superagent)
     .then(forecasts => res.send(forecasts))
     .catch(error => handleError(error, res));
+  console.log(req.query);
 }
+
+app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );
+
+
+// function handleLocationRequest(request, response){
+
+  // SELECT * FROM locations WHERE search_query = the query passed
+  //const searchData = request.query.data;
+  // const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${searchData}&key=${process.env.GEO_DATA}`;
+
+//   return superagent.get(URL)
+//     .then(res => {
+//       const location = new Location(request.query.data, res.body);
+//       response.send(location);
+//     })
+//     .catch(error=>{
+//       handleError(error, response);
+//     })
+// }
+
+// function Location(query, rawData) {
+//   console.log(query, rawData);
+//   this.search_query = query;
+//   this.formatted_query = rawData.results[0].formatted_address;
+//   this.latitude = rawData.results[0].geometry.location.lat;
+//   this.longitude = rawData.results[0].geometry.location.lng;
+// }
+
+// function handleWeatherRequest(request, response) {
+  // const searchData = request.query.data;
+  // console.log('searchData', searchData);
+  // const URL =`https://api.darksky.net/forecast/${process.env.DARK_SKY}/${searchData.latitude},${searchData.longitude}`;
+  // console.log(URL)
+//   return superagent.get(URL)
+//     .then(res => {
+//       console.log('res.body', res.body);
+//       let daySummaries = res.body.daily.data.map(data => new Weather(data));
+//       response.send(daySummaries);
+//     })
+//     .catch(error=>{
+//       handleError(error, response);
+//     })
+// }
+
+// function Weather(dayData) {
+//   this.forecast = dayData.summary;
+//   this.time = new Date(dayData.time * 1000).toDateString();
+// }
 
 function handleError(error, response) {
   console.error(error);
@@ -87,5 +136,3 @@ function Event(event){
   this.event_date = event.start.local,
   this.summary = event.summary
 }
-
-app.listen(PORT, () => console.log(`App is listening on ${PORT}`) );

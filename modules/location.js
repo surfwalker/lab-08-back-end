@@ -35,17 +35,9 @@ function getLocationFromAPI(query, client, superagent) {
 
 function cacheLocation(location, client) {
 
-  const insertSQL = `INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES('${location.search_query}','${location.formatted_query}', ${location.latitude}, ${location.longitude})RETURNING id;`;
+  const insertSQL = `INSERT INTO locations (search_query, formatted_query, latitude, longitude) VALUES('${location.search_query}','${location.formatted_query}', ${location.latitude}, ${location.longitude});`;
 
-  return client.query(insertSQL).then(results => {
-    console.log('location results from db', results);
-  
-    console.log('location results id', results.rows[0].id);
-    location.id = results.rows[0].id;
-    console.log(' new location object ', location);
-  
-    return location;
-  });
+  return client.query(insertSQL).then(results => location);
 }
 
 function Location(query, geoData) {
