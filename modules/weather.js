@@ -17,7 +17,6 @@ function getForecasts(query, client, superagent) {
   
 function checkCachedWeather(query, client) {
   
-  // console.log('&&&&&&&& query', query);
   const SQL = `SELECT * FROM weathers WHERE location_id=${query.id}`;
 
   return client.query(SQL).then(result => {
